@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+
+/* Design tokens sampled from the landing-page mock. See docs/ui-notes.md. */
+@theme {
+  --color-canvas: #080b0a;
+  --color-surface: #0e1412;
+  --color-raised: #131a17;
+  --color-hairline: #1e2a24;
+  --color-accent: #3ddc84;
+  --color-accent-dim: #2bb96b;
+  --color-accent-soft: #a8f0c6;
+  --color-ink: #e8efea;
+  --color-muted: #8a9691;
+  --color-warn: #f0b866;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 12px;
+  --radius-control: 10px;
+}
+
+/* Weir is a single-theme product: the mock is dark, and a light variant would
+   dilute the one accent colour the whole design leans on. */
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers line up in tables and stat tiles. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------
+   Hero artwork lighting.
+   The illustration is a static raster, so the motion is added in CSS on
+   top of it: a comet travelling each flow path, a breathing glow under
+   the splitter, and an occasional sheen across the whole panel. All of
+   it composites with `screen`, so it only ever adds light — it can never
+   darken or muddy the artwork underneath.
+   ------------------------------------------------------------------ */
+
+@keyframes streak {
+  from {
+    background-position: -30% 50%;
+  }
+  to {
+    background-position: 130% 50%;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sheen {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+  }
+  55%,
+  100% {
+    transform: translateX(230%) skewX(-14deg);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Motion here is decorative: without it the artwork still reads correctly. */
+@media (prefers-reduced-motion: reduce) {
+  .lit *,
+  .lit {
+    animation: none !important;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* SVG node outlines are stroked, never filled with a border. */
+svg rect {
+  stroke-width: 1;
+}
+
+/* One glow per viewport — reserved for the primary call to action. */
+.glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent),
+    0 8px 32px -8px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+.glow-soft {
+  box-shadow: 0 10px 48px -20px color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
