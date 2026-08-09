@@ -1,0 +1,21 @@
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/*/dry-run/
+docs/book/
+
+# Node / frontend (added days 6-8)
+node_modules/
+dist/
+.vite/
+
+# Secrets — never commit a deployer key
+.env
+.env.*
+!.env.example
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
