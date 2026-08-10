@@ -4,7 +4,7 @@ import {erc20Abi} from 'viem'
 import {useAccount, useChainId, useReadContract, useReadContracts} from 'wagmi'
 
 import {merchantSplitterAbi, weirFactoryAbi, weirOfferAbi} from '../abi'
-import {TOKEN_ID, factoryAddress} from '../config/contracts'
+import {TOKEN_ID, defaultReadChainId, factoryAddress} from '../config/contracts'
 import {decodeSnapshot, type OfferSnapshot} from '../lib/offer'
 
 const ZERO = '0x0000000000000000000000000000000000000000'
@@ -16,16 +16,33 @@ const ZERO = '0x0000000000000000000000000000000000000000'
  * falls back to individual eth_calls where it does not — either way the reads work.
  */
 
+/**
+ * The chain every read in this file targets. A connected wallet decides; a visitor with no
+ * wallet gets the first chain that actually has a deployment.
+ *
+ * Every `useReadContract` below passes this explicitly rather than letting wagmi infer the
+ * ambient chain. If the factory address were resolved for one chain while the reads ran
+ * against another, the calls would return empty rather than error — an offer list that is
+ * silently, plausibly wrong is worse than one that fails loudly.
+ */
+export function useWeirChainId() {
+  const {isConnected} = useAccount()
+  const connected = useChainId()
+  return isConnected ? connected : defaultReadChainId()
+}
+
 export function useFactoryAddress() {
-  const chainId = useChainId()
+  const chainId = useWeirChainId()
   return useMemo(() => factoryAddress(chainId), [chainId])
 }
 
 /** USDT metadata, read from the token rather than assumed. Decimals are the whole point. */
 export function useUsdt() {
+  const chainId = useWeirChainId()
   const factory = useFactoryAddress()
 
   const {data: token} = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'usdt',
@@ -33,6 +50,7 @@ export function useUsdt() {
   })
 
   const {data: decimals} = useReadContract({
+    chainId,
     abi: erc20Abi,
     address: token,
     functionName: 'decimals',
@@ -40,6 +58,7 @@ export function useUsdt() {
   })
 
   const {data: symbol} = useReadContract({
+    chainId,
     abi: erc20Abi,
     address: token,
     functionName: 'symbol',
@@ -54,8 +73,10 @@ export function useUsdt() {
 }
 
 export function useUsdtBalance(owner: Address | undefined) {
+  const chainId = useWeirChainId()
   const {address: token} = useUsdt()
   return useReadContract({
+    chainId,
     abi: erc20Abi,
     address: token,
     functionName: 'balanceOf',
@@ -65,8 +86,10 @@ export function useUsdtBalance(owner: Address | undefined) {
 }
 
 export function useUsdtAllowance(owner: Address | undefined, spender: Address | undefined) {
+  const chainId = useWeirChainId()
   const {address: token} = useUsdt()
   return useReadContract({
+    chainId,
     abi: erc20Abi,
     address: token,
     functionName: 'allowance',
@@ -79,9 +102,11 @@ export function useUsdtAllowance(owner: Address | undefined, spender: Address | 
 export function useMerchantSplitter(merchant?: Address) {
   const {address: connected} = useAccount()
   const account = merchant ?? connected
+  const chainId = useWeirChainId()
   const factory = useFactoryAddress()
 
   const deployed = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'splitterOf',
@@ -90,6 +115,7 @@ export function useMerchantSplitter(merchant?: Address) {
   })
 
   const predicted = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'predictSplitter',
@@ -110,12 +136,14 @@ export function useMerchantSplitter(merchant?: Address) {
 
 /** Lifetime settled volume and pending balance for a splitter. */
 export function useSplitterStats(splitter: Address | undefined) {
+  const chainId = useWeirChainId()
+
   const result = useReadContracts({
     contracts: [
-      {abi: merchantSplitterAbi, address: splitter, functionName: 'lifetimeProcessed'},
-      {abi: merchantSplitterAbi, address: splitter, functionName: 'pendingBalance'},
-      {abi: merchantSplitterAbi, address: splitter, functionName: 'activeOffer'},
-      {abi: merchantSplitterAbi, address: splitter, functionName: 'shareBps'},
+      {chainId, abi: merchantSplitterAbi, address: splitter, functionName: 'lifetimeProcessed'},
+      {chainId, abi: merchantSplitterAbi, address: splitter, functionName: 'pendingBalance'},
+      {chainId, abi: merchantSplitterAbi, address: splitter, functionName: 'activeOffer'},
+      {chainId, abi: merchantSplitterAbi, address: splitter, functionName: 'shareBps'},
     ],
     query: {enabled: Boolean(splitter), refetchInterval: 12_000},
   })
@@ -137,9 +165,11 @@ export function useSplitterStats(splitter: Address | undefined) {
 
 /** Whether a merchant has settled enough volume to raise. Payment history is the credit check. */
 export function useEligibility(merchant: Address | undefined) {
+  const chainId = useWeirChainId()
   const factory = useFactoryAddress()
 
   const {data: minProcessed} = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'minProcessed',
@@ -147,6 +177,7 @@ export function useEligibility(merchant: Address | undefined) {
   })
 
   const {data, refetch} = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'isEligible',
@@ -166,9 +197,11 @@ export function useEligibility(merchant: Address | undefined) {
 
 /** Every offer the factory has deployed, newest first. */
 export function useAllOffers() {
+  const chainId = useWeirChainId()
   const factory = useFactoryAddress()
 
   const {data: addresses, refetch} = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'offersSlice',
@@ -187,9 +220,11 @@ export function useAllOffers() {
 }
 
 export function useMerchantOffers(merchant: Address | undefined) {
+  const chainId = useWeirChainId()
   const factory = useFactoryAddress()
 
   const {data: addresses, refetch} = useReadContract({
+    chainId,
     abi: weirFactoryAbi,
     address: factory,
     functionName: 'offersOf',
@@ -205,8 +240,11 @@ export function useMerchantOffers(merchant: Address | undefined) {
 
 /** Batch `snapshot()` across many offers — one struct read each, no log scanning. */
 export function useOfferSnapshots(addresses: readonly Address[]): OfferSnapshot[] {
+  const chainId = useWeirChainId()
+
   const {data} = useReadContracts({
     contracts: addresses.map((address) => ({
+      chainId,
       abi: weirOfferAbi,
       address,
       functionName: 'snapshot' as const,
@@ -228,17 +266,20 @@ export function useOfferSnapshots(addresses: readonly Address[]): OfferSnapshot[
 
 export function useOffer(address: Address | undefined) {
   const {address: account} = useAccount()
+  const chainId = useWeirChainId()
 
   const result = useReadContracts({
     contracts: [
-      {abi: weirOfferAbi, address, functionName: 'snapshot'},
+      {chainId, abi: weirOfferAbi, address, functionName: 'snapshot'},
       {
+        chainId,
         abi: weirOfferAbi,
         address,
         functionName: 'pending',
         args: account ? [account] : undefined,
       },
       {
+        chainId,
         abi: weirOfferAbi,
         address,
         functionName: 'balanceOf',

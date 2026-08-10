@@ -26,6 +26,13 @@ export const botTestnet = defineChain({
 
 export const SUPPORTED_CHAINS = [botChain, botTestnet] as const
 
+/**
+ * `677 | 968`, not `number`. wagmi narrows its `chainId` option to the ids in the config,
+ * so anything wider fails to typecheck at the call site — which is the point: a chain id
+ * this app has no transport for should not be expressible.
+ */
+export type WeirChainId = (typeof SUPPORTED_CHAINS)[number]['id']
+
 export function explorerUrl(chainId: number, kind: 'address' | 'tx', value: string) {
   const chain = SUPPORTED_CHAINS.find((c) => c.id === chainId) ?? botChain
   return `${chain.blockExplorers.default.url}/${kind}/${value}`

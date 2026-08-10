@@ -7,6 +7,7 @@ import {useAccount, useChainId} from 'wagmi'
 import {weirFactoryAbi, weirOfferAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
 import {RiskDisclosure} from '../components/RiskDisclosure'
+import {WalletButton} from '../components/WalletButton'
 import {
   Badge,
   Button,
@@ -51,7 +52,11 @@ export function OfferDetail() {
   const valid = address && isAddress(address)
 
   return (
-    <AppShell title="Offer" subtitle={valid ? shortAddress(address, 6) : undefined}>
+    <AppShell
+      title="Offer"
+      subtitle={valid ? shortAddress(address, 6) : undefined}
+      requiresWallet={false}
+    >
       {valid ? <Detail offerAddress={address as Address} /> : <Empty title="Invalid offer address" />}
     </AppShell>
   )
@@ -269,6 +274,24 @@ function Subscribe({
 
   const wei = parseUsdt(amount, decimals)
   const needsApproval = wei !== undefined && (allowance.data ?? 0n) < wei
+
+  // The page itself is readable without a wallet; only the action needs a signer. Without
+  // this the amount field would accept input and the button would enable, then fail at send
+  // with a connector error — the offer is worth reading either way.
+  if (!account) {
+    return (
+      <Panel>
+        <h3 className="text-sm font-medium text-ink">Subscribe</h3>
+        <p className="mt-2 text-sm text-muted">
+          Connect a wallet to fund this offer. Reading the terms and the merchant's
+          processed volume does not require one.
+        </p>
+        <div className="mt-4">
+          <WalletButton />
+        </div>
+      </Panel>
+    )
+  }
 
   const problems: string[] = []
   if (wei !== undefined && wei > remaining)

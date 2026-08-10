@@ -24,6 +24,7 @@ export function Funder() {
     <AppShell
       title="Browse offers"
       subtitle="Buy a slice of a merchant's future receipts, repaid automatically from revenue."
+      requiresWallet={false}
     >
       <FunderBody />
     </AppShell>

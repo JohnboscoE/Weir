@@ -1,8 +1,10 @@
 import type {ReactNode} from 'react'
 import {NavLink, useLocation} from 'react-router-dom'
-import {useAccount} from 'wagmi'
+import {useAccount, useSwitchChain} from 'wagmi'
 
-import {useFactoryAddress} from '../hooks/useWeir'
+import {SUPPORTED_CHAINS} from '../config/chains'
+import {factoryAddress} from '../config/contracts'
+import {useFactoryAddress, useWeirChainId} from '../hooks/useWeir'
 import {shortAddress} from '../lib/format'
 import {Wordmark} from './Brand'
 import {NetworkChip, WalletButton} from './WalletButton'
@@ -16,10 +18,18 @@ const NAV = [
 export function AppShell({
   title,
   subtitle,
+  /**
+   * Whether the surface needs a signer. Browsing offers is a read — a funder evaluating
+   * the risk disclosure, the terms and the merchant's processed volume should not have to
+   * connect a wallet to do it, and a judge landing on the page certainly should not.
+   * Surfaces that actually transact (the merchant dashboard) leave this on.
+   */
+  requiresWallet = true,
   children,
 }: {
   title: string
   subtitle?: string
+  requiresWallet?: boolean
   children: ReactNode
 }) {
   const {address} = useAccount()
@@ -64,7 +74,7 @@ export function AppShell({
 
         {!factory ? (
           <NotConfigured />
-        ) : !address ? (
+        ) : requiresWallet && !address ? (
           <Panel className="text-center">
             <p className="text-sm text-muted">Connect a wallet to continue.</p>
             <div className="mt-4 flex justify-center">
@@ -79,20 +89,50 @@ export function AppShell({
   )
 }
 
-/** Deploy first, then set the address — never silently read address zero. */
+/**
+ * Deploy first, then set the address — never silently read address zero.
+ *
+ * Names the offending chain rather than saying "the connected network". The overwhelmingly
+ * common cause is a wallet pointed at a chain that has no deployment yet, which is a
+ * one-click fix, not a configuration error — so offer the click when another supported
+ * chain does have a factory.
+ */
 function NotConfigured() {
+  const chainId = useWeirChainId()
+  const {switchChain, isPending} = useSwitchChain()
+
+  const current = SUPPORTED_CHAINS.find((c) => c.id === chainId)
+  const deployed = SUPPORTED_CHAINS.find((c) => factoryAddress(c.id))
+
   return (
     <Panel className="border-warn/25 bg-warn/[0.04]">
-      <h2 className="text-sm font-semibold text-warn">Factory address not configured</h2>
+      <h2 className="text-sm font-semibold text-warn">
+        No deployment on {current?.name ?? `chain ${chainId}`}
+      </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        No <code className="text-ink">WeirFactory</code> address is set for the connected
-        network. Deploy the contracts, then add the address to{' '}
-        <code className="text-ink">frontend/.env.local</code>:
+        No <code className="text-ink">WeirFactory</code> address is configured for{' '}
+        <span className="text-ink">{current?.name ?? `chain ${chainId}`}</span> (id{' '}
+        <span className="tabular text-ink">{chainId}</span>).
+        {deployed
+          ? ` Weir is deployed on ${deployed.name} — switch networks to continue.`
+          : ' Deploy the contracts, then add the address to frontend/.env.local:'}
       </p>
-      <pre className="mt-3 overflow-x-auto rounded-[10px] border border-hairline bg-canvas p-3 text-xs text-muted">
-        {`VITE_FACTORY_ADDRESS_677=0x…   # BOT Chain mainnet
+
+      {deployed ? (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => switchChain({chainId: deployed.id})}
+          className="mt-4 rounded-[10px] bg-accent px-3.5 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-50"
+        >
+          {isPending ? 'Switching…' : `Switch to ${deployed.name}`}
+        </button>
+      ) : (
+        <pre className="mt-3 overflow-x-auto rounded-[10px] border border-hairline bg-canvas p-3 text-xs text-muted">
+          {`VITE_FACTORY_ADDRESS_677=0x…   # BOT Chain mainnet
 VITE_FACTORY_ADDRESS_968=0x…   # BOT Chain testnet`}
-      </pre>
+        </pre>
+      )}
     </Panel>
   )
 }
