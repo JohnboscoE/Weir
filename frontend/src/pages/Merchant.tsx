@@ -5,6 +5,7 @@ import {useAccount, useChainId} from 'wagmi'
 
 import {merchantSplitterAbi, weirFactoryAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
+import {TestnetFaucet} from '../components/TestnetFaucet'
 import {
   Badge,
   Button,
@@ -177,6 +178,16 @@ function SplitterOverview({splitter}: {splitter: Address}) {
           </div>
           <TxError error={tx.error} />
         </Panel>
+
+        <TestnetFaucet
+          target={splitter}
+          title="Simulate a customer payment"
+          description="Mints test USDT straight to your splitter address — exactly what a customer paying you would do. Settle afterwards to sweep it."
+          onDone={() => {
+            stats.refetch()
+            eligibility.refetch()
+          }}
+        />
 
         {!eligibility.isEligible && (
           <Panel>

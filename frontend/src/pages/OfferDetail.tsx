@@ -7,6 +7,7 @@ import {useAccount, useChainId} from 'wagmi'
 import {weirFactoryAbi, weirOfferAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
 import {RiskDisclosure} from '../components/RiskDisclosure'
+import {TestnetFaucet} from '../components/TestnetFaucet'
 import {WalletButton} from '../components/WalletButton'
 import {
   Badge,
@@ -166,11 +167,18 @@ function Detail({offerAddress}: {offerAddress: Address}) {
         />
 
         {isOpenForFunding(offer) && (
-          <Subscribe
-            offerAddress={offerAddress}
-            remaining={offer.terms.target - offer.raised}
-            onDone={refetch}
-          />
+          <>
+            <Subscribe
+              offerAddress={offerAddress}
+              remaining={offer.terms.target - offer.raised}
+              onDone={refetch}
+            />
+            <TestnetFaucet
+              title="Get test USDT"
+              description="Mints test USDT to your connected wallet so you can subscribe. Testnet has no value; this is the funder side of the demo loop."
+              defaultAmount="100"
+            />
+          </>
         )}
 
         {isRefundable(offer) && units !== undefined && units > 0n && (
