@@ -1,7 +1,9 @@
 # Foundry
 contracts/out/
 contracts/cache/
-contracts/broadcast/*/dry-run/
+# Foundry nests broadcast artifacts as <script>/<chainId>/, so a single `*` misses the
+# dry-run directory and simulations get committed alongside real deployments.
+contracts/broadcast/*/*/dry-run/
 docs/book/
 
 # Node / frontend (added days 6-8)

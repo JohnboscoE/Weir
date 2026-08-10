@@ -22,6 +22,11 @@ contract Deploy is Script {
             require(block.chainid != 677, "refusing to deploy a mock USDT on mainnet 677");
             usdt = address(new MockUSDT());
             console.log("deployed MockUSDT:", usdt);
+        } else {
+            // The factory falls back to 6 decimals when `decimals()` reverts, which it also
+            // does for an address holding no code. A mistyped token address would therefore
+            // deploy a factory that looks entirely healthy and can never receive a payment.
+            require(usdt.code.length > 0, "USDT_ADDRESS has no code on this chain");
         }
 
         factory = new WeirFactory(usdt);

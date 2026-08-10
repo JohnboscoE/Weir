@@ -1,0 +1,15 @@
+{
+  "name": "weir",
+  "private": true,
+  "description": "Root convenience scripts. The real projects are contracts/ (Foundry) and frontend/ (Vite); this file only delegates so a command run from the repo root does the obvious thing instead of failing with ENOENT.",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview",
+    "install:frontend": "npm --prefix frontend install",
+    "test": "cd contracts && forge test",
+    "test:gas": "cd contracts && forge test --gas-report",
+    "fmt": "cd contracts && forge fmt"
+  }
+}
