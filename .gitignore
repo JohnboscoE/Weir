@@ -21,3 +21,6 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local design spec — deliberately not published
+CLAUDE.md
