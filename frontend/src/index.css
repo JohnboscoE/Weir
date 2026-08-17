@@ -44,22 +44,13 @@ body {
 }
 
 /* ------------------------------------------------------------------
-   Hero artwork lighting.
-   The illustration is a static raster, so the motion is added in CSS on
-   top of it: a comet travelling each flow path, a breathing glow under
-   the splitter, and an occasional sheen across the whole panel. All of
-   it composites with `screen`, so it only ever adds light — it can never
-   darken or muddy the artwork underneath.
+   Hero lighting.
+   The hero is looping footage, graded to the palette in HeroArtwork.tsx.
+   The footage carries its own motion, so only ambient light is added
+   here: a breathing accent glow and an occasional sheen across the
+   panel. Both composite with `screen`, so they only ever add light —
+   they can never darken or muddy the frame underneath.
    ------------------------------------------------------------------ */
-
-@keyframes streak {
-  from {
-    background-position: -30% 50%;
-  }
-  to {
-    background-position: 130% 50%;
-  }
-}
 
 @keyframes breathe {
   0%,
@@ -83,17 +74,9 @@ body {
   }
 }
 
-@keyframes drift {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-/* Motion here is decorative: without it the artwork still reads correctly. */
+/* Motion here is decorative: without it the hero still reads correctly. The video
+   itself is not covered by this rule — `animation: none` cannot pause playback — so
+   HeroArtwork swaps in the still via matchMedia instead. */
 @media (prefers-reduced-motion: reduce) {
   .lit *,
   .lit {

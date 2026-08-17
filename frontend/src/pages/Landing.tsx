@@ -1,7 +1,7 @@
 import {Link} from 'react-router-dom'
 
 import {Wordmark} from '../components/Brand'
-import {HeroArtwork} from '../components/HeroArtwork'
+import {HeroBackdrop} from '../components/HeroBackdrop'
 import {RevenueLoop} from '../components/RevenueLoop'
 import {NetworkChip} from '../components/WalletButton'
 import {Card, Panel} from '../components/ui'
@@ -9,14 +9,21 @@ import {botChain} from '../config/chains'
 
 export function Landing() {
   return (
-    <div className="min-h-screen bg-canvas">
-      <SiteHeader />
-      <Hero />
-      <TrustBar />
-      <LoopSection />
-      <ForMerchants />
-      <HowItWorks />
-      <SiteFooter />
+    // No background on this wrapper: the canvas colour comes from `body`, and anything
+    // painted here would sit on top of the fixed backdrop and hide it entirely.
+    <div className="relative min-h-screen">
+      <HeroBackdrop />
+
+      {/* Everything the reader actually looks at rides above the footage. */}
+      <div className="relative z-10">
+        <SiteHeader />
+        <Hero />
+        <TrustBar />
+        <LoopSection />
+        <ForMerchants />
+        <HowItWorks />
+        <SiteFooter />
+      </div>
     </div>
   )
 }
@@ -55,7 +62,9 @@ function SiteHeader() {
 
 function Hero() {
   return (
-    <section className="mx-auto max-w-7xl px-6 pt-20 pb-16">
+    // Tall enough that the backdrop has room to read as footage rather than as texture —
+    // the artwork panel that used to occupy this space is now the background itself.
+    <section className="mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-center px-6 pt-24 pb-24">
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface px-3 py-1.5 text-xs font-medium text-ink">
           <span className="text-accent">◆</span> Built on BOT Chain ({botChain.id})
@@ -91,10 +100,6 @@ function Hero() {
           <span className="text-accent">◈</span>
           No oracles. Fully on-chain. Transparent by design.
         </p>
-      </div>
-
-      <div className="mt-16">
-        <HeroArtwork />
       </div>
     </section>
   )
