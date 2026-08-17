@@ -51,11 +51,23 @@ customer can pay into. The holder count is the distinguishing signal.
    output, never for hardcoding. `MIN_PROCESSED = 10e6` is therefore **10 USDT**,
    which is the intended gate value.
 
-3. **Fee-on-transfer — untested, and it does not matter.** Confirming this needs a
-   real transfer with real tokens. Every accounting path already measures balance
-   deltas before and after the transfer rather than trusting the requested amount, so
-   the contracts are correct either way. Worth re-checking during the smoke deploy,
-   when tokens are actually moving.
+3. **Fee-on-transfer — no. Resolved 2026-08-17.** `script/SmokeLoop.s.sol` drives the
+   entire business loop — five settlements to clear the eligibility gate, subscribe,
+   activate, a settlement that carries the offer to its cap, and a claim — then compares
+   the caller's USDT balance before and after. Principal round-trips in this loop, so any
+   skim would show as a shortfall:
+
+   ```
+   usdt before:  10000000
+   usdt after:   10000000
+   no shortfall: token does not take a transfer fee
+   ```
+
+   Simulated, not broadcast: `forge script` executes the token's real bytecode against
+   real chain state, so transfer semantics are conclusive without spending anything.
+   Every accounting path still measures balance deltas rather than trusting the requested
+   amount — the contracts were correct either way, and stay correct if the bridge ever
+   changes the token.
 
 ### Testnet is stricter than mainnet
 
