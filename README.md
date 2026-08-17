@@ -108,6 +108,16 @@ requested amount, so fee-on-transfer behaviour cannot corrupt the books. The tes
 
 ### Deployments
 
+**Mainnet (677)** — live:
+
+| | |
+|---|---|
+| `WeirFactory` | [`0xd4569Fd5F2D95374cd81Ad20E8c8544ccb8F7E4C`](https://scan.botchain.ai/address/0xd4569Fd5F2D95374cd81Ad20E8c8544ccb8F7E4C) |
+| `USDT` (bridged, not deployed by us) | [`0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C`](https://scan.botchain.ai/address/0xaBabc7Ddc03e501d190C676BF3d92ef0e6e87a3C) |
+
+Read back from the deployed factory: `usdt()` resolves to the bridged token above,
+`usdtDecimals()` is 6, `minProcessed()` is `10000000` — a 10 USDT eligibility gate.
+
 **Testnet (968)** — full loop verified end to end on chain:
 
 | | |
@@ -115,8 +125,9 @@ requested amount, so fee-on-transfer behaviour cannot corrupt the books. The tes
 | `WeirFactory` | `0xb7b6844e7a428c9828c22a4b542b0e8622759fb8` |
 | `MockUSDT` | `0xd4569fd5f2d95374cd81ad20e8c8544ccb8f7e4c` |
 
-**Mainnet (677)** — not yet deployed. The deploy path is verified by simulation against
-the real token; deployment is pending funding of the deployer account.
+The mainnet factory and the testnet mock share an address. That is not a copy-paste
+error: both are the first `CREATE` from the same deployer on their respective chains,
+and contract addresses are a function of deployer and nonce.
 
 ---
 

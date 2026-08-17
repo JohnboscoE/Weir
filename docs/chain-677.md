@@ -80,7 +80,19 @@ Estimated total gas used: 5,199,902 @ 20 gwei  ->  ~0.104 BOT
 
 (forge prints the cost as "ETH"; the native token is BOT.)
 
-Deployer `0x5eec93861c5939c00e2bad9fc12b6964b60f6287` holds **0 BOT on 677** at
-nonce 0. Fund it before the smoke deploy — 0.104 BOT for the factory, plus headroom
-for a splitter deployment and a few settles. A handful of real USDT is also needed to
-push through the splitter.
+Broadcast 2026-08-17 from `0x5eec93861c5939c00e2bad9fc12b6964b60f6287` at nonce 0:
+
+```
+WeirFactory  ->  0xd4569Fd5F2D95374cd81Ad20E8c8544ccb8F7E4C
+```
+
+Cost 0.08 BOT against the 1 BOT funded; 0.92 BOT remains, which covers splitter
+deployments and settles. Read back from chain after deployment: `usdt()` is the
+canonical bridged token (not the BOUSDT decoy), `usdtDecimals()` is 6,
+`minProcessed()` is `10000000`.
+
+Still outstanding: the deployer holds **0 USDT on 677**, so the revenue loop —
+settle, split, claim — has not yet been exercised against the real token. Item 3
+above (fee-on-transfer) therefore remains unconfirmed on mainnet. The contracts are
+correct either way because every accounting path measures balance deltas, but the
+end-to-end demo on 677 needs real USDT bridged in.
