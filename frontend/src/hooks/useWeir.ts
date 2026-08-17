@@ -1,9 +1,10 @@
 import {useMemo} from 'react'
 import type {Address} from 'viem'
 import {erc20Abi} from 'viem'
-import {useAccount, useChainId, useReadContract, useReadContracts} from 'wagmi'
+import {useAccount, useReadContract, useReadContracts} from 'wagmi'
 
 import {merchantSplitterAbi, weirFactoryAbi, weirOfferAbi} from '../abi'
+import {SUPPORTED_CHAINS, type WeirChainId} from '../config/chains'
 import {TOKEN_ID, defaultReadChainId, factoryAddress} from '../config/contracts'
 import {decodeSnapshot, type OfferSnapshot} from '../lib/offer'
 
@@ -17,18 +18,38 @@ const ZERO = '0x0000000000000000000000000000000000000000'
  */
 
 /**
+ * The chain the wallet is *actually* on, including chains Weir does not support.
+ *
+ * Deliberately not `useChainId()`. That returns `config.state.chainId`, which wagmi
+ * refuses to move to an unconfigured chain — see the `isChainConfigured` guard in
+ * `@wagmi/core`'s `createConfig`. So a wallet that switches to Base leaves `useChainId()`
+ * reporting 677, and every check built on it concludes all is well while the wallet is
+ * somewhere else entirely. `useAccount().chainId` comes from the connection itself and
+ * reports the truth.
+ */
+export function useWalletChainId() {
+  const {isConnected, chainId} = useAccount()
+  return isConnected ? chainId : undefined
+}
+
+/**
  * The chain every read in this file targets. A connected wallet decides; a visitor with no
  * wallet gets the first chain that actually has a deployment.
+ *
+ * `undefined` when the wallet is on a chain Weir has no deployment on. That propagates to
+ * `useFactoryAddress`, which is what makes `AppShell` show its wrong-network panel instead
+ * of rendering a working-looking surface whose buttons would send transactions into the
+ * void.
  *
  * Every `useReadContract` below passes this explicitly rather than letting wagmi infer the
  * ambient chain. If the factory address were resolved for one chain while the reads ran
  * against another, the calls would return empty rather than error — an offer list that is
  * silently, plausibly wrong is worse than one that fails loudly.
  */
-export function useWeirChainId() {
-  const {isConnected} = useAccount()
-  const connected = useChainId()
-  return isConnected ? connected : defaultReadChainId()
+export function useWeirChainId(): WeirChainId | undefined {
+  const wallet = useWalletChainId()
+  if (wallet === undefined) return defaultReadChainId()
+  return SUPPORTED_CHAINS.find((c) => c.id === wallet)?.id
 }
 
 export function useFactoryAddress() {

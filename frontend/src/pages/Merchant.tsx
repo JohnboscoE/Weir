@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {Link} from 'react-router-dom'
 import type {Address} from 'viem'
-import {useAccount, useChainId} from 'wagmi'
+import {useAccount} from 'wagmi'
 
 import {merchantSplitterAbi, weirFactoryAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
@@ -27,6 +27,7 @@ import {
   useMerchantSplitter,
   useSplitterStats,
   useUsdt,
+  useWeirChainId,
 } from '../hooks/useWeir'
 import {useTx} from '../hooks/useTx'
 import {
@@ -113,7 +114,7 @@ function DeploySplitter({predicted, onDone}: {predicted?: Address; onDone: () =>
 
 function SplitterOverview({splitter}: {splitter: Address}) {
   const {address} = useAccount()
-  const chainId = useChainId()
+  const chainId = useWeirChainId()
   const {decimals, symbol} = useUsdt()
   const stats = useSplitterStats(splitter)
   const eligibility = useEligibility(address)

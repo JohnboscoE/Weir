@@ -33,7 +33,10 @@ export const SUPPORTED_CHAINS = [botChain, botTestnet] as const
  */
 export type WeirChainId = (typeof SUPPORTED_CHAINS)[number]['id']
 
-export function explorerUrl(chainId: number, kind: 'address' | 'tx', value: string) {
+/** A chain Weir actually deploys to, carrying the fields `wallet_addEthereumChain` needs. */
+export type WeirChain = (typeof SUPPORTED_CHAINS)[number]
+
+export function explorerUrl(chainId: number | undefined, kind: 'address' | 'tx', value: string) {
   const chain = SUPPORTED_CHAINS.find((c) => c.id === chainId) ?? botChain
   return `${chain.blockExplorers.default.url}/${kind}/${value}`
 }

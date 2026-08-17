@@ -1,12 +1,13 @@
 import type {ReactNode} from 'react'
 import {NavLink, useLocation} from 'react-router-dom'
-import {useAccount, useSwitchChain} from 'wagmi'
+import {useAccount} from 'wagmi'
 
-import {SUPPORTED_CHAINS} from '../config/chains'
+import {SUPPORTED_CHAINS, botChain} from '../config/chains'
 import {factoryAddress} from '../config/contracts'
-import {useFactoryAddress, useWeirChainId} from '../hooks/useWeir'
+import {useFactoryAddress, useWalletChainId} from '../hooks/useWeir'
 import {shortAddress} from '../lib/format'
 import {Wordmark} from './Brand'
+import {NetworkDetails, useNetworkSwitch} from './NetworkSwitch'
 import {NetworkChip, WalletButton} from './WalletButton'
 import {Panel, cx} from './ui'
 
@@ -98,11 +99,17 @@ export function AppShell({
  * chain does have a factory.
  */
 function NotConfigured() {
-  const chainId = useWeirChainId()
-  const {switchChain, isPending} = useSwitchChain()
+  // The wallet's real chain, so someone on Base is told they are on Base rather than
+  // being shown a supported chain's name they are not actually connected to.
+  const chainId = useWalletChainId()
 
   const current = SUPPORTED_CHAINS.find((c) => c.id === chainId)
   const deployed = SUPPORTED_CHAINS.find((c) => factoryAddress(c.id))
+
+  // Adds the chain when the wallet has never seen it, which is the common case here: the
+  // visitor is on Ethereum or BSC and no wallet ships BOT Chain by default. A plain
+  // `switchChain` fails for exactly the people this panel exists to rescue.
+  const {switchToWeir, pending, error, needsManual} = useNetworkSwitch(deployed ?? botChain)
 
   return (
     <Panel className="border-warn/25 bg-warn/[0.04]">
@@ -119,14 +126,21 @@ function NotConfigured() {
       </p>
 
       {deployed ? (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => switchChain({chainId: deployed.id})}
-          className="mt-4 rounded-[10px] bg-accent px-3.5 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-50"
-        >
-          {isPending ? 'Switching…' : `Switch to ${deployed.name}`}
-        </button>
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={switchToWeir}
+              className="rounded-[10px] bg-accent px-3.5 py-2 text-sm font-medium text-canvas transition hover:opacity-90 disabled:opacity-50"
+            >
+              {pending ? 'Switching…' : `Switch to ${deployed.name}`}
+            </button>
+            {error && <span className="text-xs text-warn">{error}</span>}
+          </div>
+
+          {needsManual && <NetworkDetails chain={deployed} className="mt-3" />}
+        </>
       ) : (
         <pre className="mt-3 overflow-x-auto rounded-[10px] border border-hairline bg-canvas p-3 text-xs text-muted">
           {`VITE_FACTORY_ADDRESS_677=0x…   # BOT Chain mainnet

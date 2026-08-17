@@ -2,7 +2,7 @@ import {useState} from 'react'
 import {useParams} from 'react-router-dom'
 import type {Address} from 'viem'
 import {erc20Abi, isAddress} from 'viem'
-import {useAccount, useChainId} from 'wagmi'
+import {useAccount} from 'wagmi'
 
 import {weirFactoryAbi, weirOfferAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
@@ -29,6 +29,7 @@ import {
   useUsdt,
   useUsdtAllowance,
   useUsdtBalance,
+  useWeirChainId,
 } from '../hooks/useWeir'
 import {useTx} from '../hooks/useTx'
 import {
@@ -64,7 +65,7 @@ export function OfferDetail() {
 }
 
 function Detail({offerAddress}: {offerAddress: Address}) {
-  const chainId = useChainId()
+  const chainId = useWeirChainId()
   const {address: account} = useAccount()
   const {decimals, symbol} = useUsdt()
   const {offer, pending, units, refetch, isLoading} = useOffer(offerAddress)
