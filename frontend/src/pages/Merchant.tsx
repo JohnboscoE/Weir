@@ -5,6 +5,7 @@ import {useAccount} from 'wagmi'
 
 import {merchantSplitterAbi, weirFactoryAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
+import {AddTokenButton} from '../components/NetworkSwitch'
 import {TestnetFaucet} from '../components/TestnetFaucet'
 import {
   Badge,
@@ -115,7 +116,7 @@ function DeploySplitter({predicted, onDone}: {predicted?: Address; onDone: () =>
 function SplitterOverview({splitter}: {splitter: Address}) {
   const {address} = useAccount()
   const chainId = useWeirChainId()
-  const {decimals, symbol} = useUsdt()
+  const {address: token, decimals, symbol} = useUsdt()
   const stats = useSplitterStats(splitter)
   const eligibility = useEligibility(address)
   const [copied, setCopied] = useState(false)
@@ -214,6 +215,10 @@ function SplitterOverview({splitter}: {splitter: Address}) {
         <p className="mt-1.5 text-xs leading-relaxed text-muted">
           Share this with your customers to accept {symbol}.
         </p>
+
+        {/* Adding the network registers BOT only, so a merchant watching for incoming
+            payments would see nothing arrive until the token is listed too. */}
+        <AddTokenButton address={token} symbol={symbol} decimals={decimals} className="mt-3" />
 
         <div className="mt-4 rounded-[10px] border border-hairline bg-canvas p-3">
           <div className="font-mono text-xs break-all text-accent">{splitter}</div>

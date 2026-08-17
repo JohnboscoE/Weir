@@ -124,6 +124,65 @@ export function NetworkDetails({
   )
 }
 
+/**
+ * Adds the USDT token to the wallet's asset list.
+ *
+ * Adding a network registers only its *native* currency, so a wallet freshly pointed at
+ * BOT Chain shows a BOT balance and no USDT — which reads as "my money is gone" to anyone
+ * who does not know that ERC-20s are tracked separately. Every surface here is denominated
+ * in USDT, so the balance being invisible is not cosmetic.
+ *
+ * Renders nothing until the token address and decimals have been read from chain. Decimals
+ * are never assumed: passing the wrong value here makes the wallet display a balance off
+ * by orders of magnitude, which is worse than showing none at all.
+ */
+export function AddTokenButton({
+  address,
+  symbol,
+  decimals,
+  className,
+}: {
+  address?: string
+  symbol?: string
+  decimals?: number
+  className?: string
+}) {
+  const {connector, isConnected} = useAccount()
+  const [added, setAdded] = useState(false)
+  const [error, setError] = useState<string>()
+
+  if (!isConnected || !address || decimals === undefined) return null
+
+  async function add() {
+    setError(undefined)
+    try {
+      const provider = (await connector?.getProvider()) as Provider | undefined
+      if (!provider) throw new Error('No wallet provider.')
+
+      await provider.request({
+        method: 'wallet_watchAsset',
+        params: [{type: 'ERC20', options: {address, symbol, decimals}}] as unknown[],
+      })
+      setAdded(true)
+    } catch (watchError) {
+      setError(message(watchError))
+    }
+  }
+
+  return (
+    <span className={cx('inline-flex items-center gap-2', className)}>
+      <button
+        type="button"
+        onClick={add}
+        className="rounded-[8px] border border-hairline px-2 py-1 text-xs text-muted transition hover:border-accent/50 hover:text-ink"
+      >
+        {added ? `${symbol} added` : `Add ${symbol} to wallet`}
+      </button>
+      {error && <span className="text-[10px] text-warn">{error}</span>}
+    </span>
+  )
+}
+
 function CopyButton({value}: {value: string}) {
   const [copied, setCopied] = useState(false)
 

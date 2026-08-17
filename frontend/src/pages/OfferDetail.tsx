@@ -7,6 +7,7 @@ import {useAccount} from 'wagmi'
 import {weirFactoryAbi, weirOfferAbi} from '../abi'
 import {AppShell} from '../components/AppShell'
 import {RiskDisclosure} from '../components/RiskDisclosure'
+import {AddTokenButton} from '../components/NetworkSwitch'
 import {TestnetFaucet} from '../components/TestnetFaucet'
 import {WalletButton} from '../components/WalletButton'
 import {
@@ -332,6 +333,10 @@ function Subscribe({
           hint={`${formatUsdt(remaining, decimals)} ${symbol} remaining · you hold ${formatUsdt(balance.data, decimals)}`}
         />
       </div>
+
+      {/* A funder whose wallet does not list the token sees no balance and assumes they
+          cannot subscribe. Offered right where that doubt appears. */}
+      <AddTokenButton address={token} symbol={symbol} decimals={decimals} className="mt-3" />
 
       {problems.map((p) => (
         <p key={p} className="mt-3 text-xs text-warn">
